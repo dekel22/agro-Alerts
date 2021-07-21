@@ -1,0 +1,2 @@
+weatheralerts.batch.delay.in.milliseconds=3600
+weatheralerts.bootstrupServer=cnt7-naya-cdh63:9092
