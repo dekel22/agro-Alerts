@@ -1,0 +1,3 @@
+{"stationId":8,"name":"dekel","lastName":"levitan","email":"dekel@gmail.com","location":"1021,121333","crops":"corn","dry_sensitivity":10,"warm_sensitivity":30,"cold_sensitivity":0}
+{"stationId":6,"name":"dekel1","lastName":"levitan","email":"dekel@gmail.com","location":"1021,121333","crops":"corn","dry_sensitivity":40,"warm_sensitivity":40,"cold_sensitivity":-10}
+{"stationId":4,"name":"dekel2","lastName":"levitan","email":"dekel@gmail.com","location":"1021,121333","crops":"corn","dry_sensitivity":20,"warm_sensitivity":30,"cold_sensitivity":0}

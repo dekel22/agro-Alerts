@@ -1,32 +1,38 @@
 package weather_alerts.scala.services
 
+import org.apache.spark
 import org.apache.spark.sql.functions.{avg, col, from_json, struct, sum, to_json}
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{Encoders, SparkSession}
 import weather_alerts.scala.model.{Farm, NormalizedStationCollectedData}
-import weather_alerts.scala.services.KafkaManage.getOffsets
+import weather_alerts.configuration.Configuration
+
+import scala.collection.JavaConversions.collectionAsScalaIterable
 
 
 
 object AgroAlert extends App {
-  val bootstrapServer = "cnt7-naya-cdh63:9092"
-  val weatherData="weather_info_verified_data"
-  def calcWeatherAlertsBatch() :Unit= {
-    val offsets = KafkaManage.getOffsets("weather_info_verified_data")
-    val old_warms = KafkaManage.getOffsets("warm_alerts")
-    val dry_warms = KafkaManage.getOffsets("dry_alerts")
+  val bootstrapServer = Configuration.bootstrupServer
+  val dryAlerts="dry_alerts"
+  val  warmAlerts="warm_alerts"
 
-    val sparkSession: SparkSession = SparkSession.builder.master("local[*]").appName("example_app").getOrCreate
+
+  def calcWeatherAlertsBatch() :Unit= {
+
+    val offsets = KafkaManage.getOffsets(Configuration.weatherTopic)
+    val takeFromOffset= offsets(0)-(Configuration.batchPerHour*Configuration.numberOfStation)
+    val sparkSession: SparkSession = SparkSession.builder.master("local[*]").appName("calc_alerts").getOrCreate
     val farmSchema = Encoders.product[Farm].schema
     val farms = sparkSession.read.schema(farmSchema).json("farms\\*")
 
     val schema = Encoders.product[NormalizedStationCollectedData].schema
-    val inputDF = sparkSession
-      .read.format("kafka")
-      .option("kafka.bootstrap.servers", bootstrapServer)
-      .option("subscribe", weatherData)
-      .option("startingOffsets", """{"" + weatherData +"":{"0":375500}}""")
-      .load.select(col("value").cast(StringType).alias("value"))
+    val inputDF =  sparkSession
+      .read
+      .format("kafka")
+      .option("kafka.bootstrap.servers", "host1:port1,host2:port2")
+      .option("subscribe", "weather_info_verified_data")
+      .option("startingOffsets", """{"weather_info_verified_data":{"0":""" +takeFromOffset +""" }}""")
+      .load().select(col("value").cast(StringType).alias("value"))
     val DF = inputDF
       .withColumn("parsed_json", from_json(col("value"), schema))
       .select("parsed_json.*")
@@ -57,11 +63,9 @@ object AgroAlert extends App {
       .write
       .format("kafka")
       .option("kafka.bootstrap.servers", bootstrapServer)
-      .option("topic", "dry_alerts")
+      .option("topic", dryAlerts)
       .save()
 
-    val dd = KafkaManage.getOffsets("test")
-    println("ff")
   }
 
 

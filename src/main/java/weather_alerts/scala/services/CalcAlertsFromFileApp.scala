@@ -11,7 +11,6 @@ import java.time.format.DateTimeFormatter
 
 
 object CalcAlertsFromFileApp extends App {
-  val bootstrapServer = "cnt7-naya-cdh63:9092";
   val sparkSession: SparkSession = SparkSession.builder.master("local[*]").appName("example_app").getOrCreate
   val farmSchema = Encoders.product[Farm].schema
   val farms = sparkSession.read.schema(farmSchema).json("farms\\*")
